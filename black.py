@@ -45,7 +45,7 @@ from blib2to3.pgen2.parse import ParseError
 
 
 __version__ = "18.5b1"
-DEFAULT_LINE_LENGTH = 88
+DEFAULT_LINE_LENGTH = 79
 CACHE_DIR = Path(user_cache_dir("black", version=__version__))
 
 
@@ -2322,18 +2322,18 @@ def normalize_string_quotes(leaf: Leaf) -> None:
     Note: Mutates its argument.
     """
     value = leaf.value.lstrip("furbFURB")
-    if value[:3] == '"""':
+    if value[:3] == "'''":
         return
 
-    elif value[:3] == "'''":
-        orig_quote = "'''"
-        new_quote = '"""'
-    elif value[0] == '"':
-        orig_quote = '"'
-        new_quote = "'"
-    else:
+    elif value[:3] == '"""':
+        orig_quote = '"""'
+        new_quote = "'''"
+    elif value[0] == "'":
         orig_quote = "'"
         new_quote = '"'
+    else:
+        orig_quote = '"'
+        new_quote = "'"
     first_quote_pos = leaf.value.find(orig_quote)
     if first_quote_pos == -1:
         return  # There's an internal error
@@ -2360,15 +2360,15 @@ def normalize_string_quotes(leaf: Leaf) -> None:
             leaf.value = f"{prefix}{orig_quote}{body}{orig_quote}"
         new_body = sub_twice(escaped_orig_quote, rf"\1\2{orig_quote}", new_body)
         new_body = sub_twice(unescaped_new_quote, rf"\1\\{new_quote}", new_body)
-    if new_quote == '"""' and new_body[-1] == '"':
+    if new_quote == "'''" and new_body[-1] == "'":
         # edge case:
-        new_body = new_body[:-1] + '\\"'
+        new_body = new_body[:-1] + "\\'"
     orig_escape_count = body.count("\\")
     new_escape_count = new_body.count("\\")
     if new_escape_count > orig_escape_count:
         return  # Do not introduce more escaping
 
-    if new_escape_count == orig_escape_count and orig_quote == '"':
+    if new_escape_count == orig_escape_count and orig_quote == "'":
         return  # Prefer double quotes
 
     leaf.value = f"{prefix}{new_quote}{new_body}{new_quote}"
